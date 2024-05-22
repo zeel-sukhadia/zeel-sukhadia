@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Object Detection Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      padding: 50px;
+      padding-top: 0px;
+      font-family: Arial, sans-serif;
+      background-color: #e6e6fa;
+    }
+
+    canvas {
+      background-color: #ffffff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      background: linear-gradient(131deg,
+          rgb(255 255 0 / 95%),
+          #ff05ee,
+          #60c9ef,
+          #26f7c5);
+      text-align: center;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Object Detection Chart</h1>
+  <canvas id="chart"></canvas>
+
+  <script>
+    if (localStorage.getItem("detectedObjects")) {
+      const detectedObjects = JSON.parse(
+        localStorage.getItem("detectedObjects")
+      );
+
+      const labelColors = {
+        wall: "rgba(255, 99, 132, 0.6)",
+        bed: "rgba(54, 162, 235, 0.6)",
+        window: "rgba(0, 0, 255, 0.6)",
+        dining_table: "rgba(255, 0, 0, 0.6)",
+        tv: "rgba(255, 165, 0, 0.6)",
+        door: "rgba(165, 42, 42, 0.6)",
+        large_sofa: "rgba(250, 128, 114, 0.6)",
+        toilet_seat: "rgba(128, 128, 0, 0.6)",
+        fridge: "rgba(0, 128, 128, 0.6)",
+        gas: "rgba(128, 0, 128, 0.6)",
+        small_sink: "rgba(0, 255, 255, 0.6)",
+        chair: "rgba(0, 255, 0, 0.6)",
+        column: "rgba(128, 128, 128, 0.6)",
+        small_sofa: "rgba(255, 192, 203, 0.6)",
+        sink: "rgba(255, 255, 0, 0.6)",
+        table: "rgba(255, 0, 255, 0.6)",
+        tipoi: "rgba(210, 180, 140, 0.6)",
+        wardrobe: "rgba(218, 165, 32, 0.6)",
+      };
+
+      function drawScatterPlot(detectedObjects) {
+        const ctx = document.getElementById("chart");
+        const scatterChart = new Chart(ctx, {
+          type: "scatter",
+          data: {
+            datasets: detectedObjects.map((obj) => ({
+              label: obj.class_label,
+              data: [{ x: (obj.x1 + obj.x2) / 2, y: (obj.y1 + obj.y2) / 2 }],
+              pointStyle: "rect",
+              backgroundColor:
+                labelColors[obj.class_label] || "rgba(255, 206, 86, 0.6)",
+              borderWidth: 2,
+              pointRadius: 10,
+            })),
+          },
+          options: {
+            scales: {
+              x: {
+                type: "linear",
+                position: "bottom",
+              },
+              y: {
+                type: "linear",
+                position: "left",
+                ticks: {
+                  beginAtZero: false,
+                },
+              },
+            },
+          },
+          plugins: [
+            {
+              afterDatasetsDraw: (chart, easing) => {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, i) => {
+                  const meta = chart.getDatasetMeta(i);
+                  if (!meta.hidden) {
+                    meta.data.forEach((element, index) => {
+                      ctx.fillStyle = dataset.backgroundColor;
+                      ctx.fillRect(element.x - 5, element.y - 5, 10, 10);
+                    });
+                  }
+                });
+              },
+            },
+          ],
+        });
+      }
+      drawScatterPlot(detectedObjects);
+    } else {
+      document.body.innerHTML =
+        "<h1>No detected objects data available.</h1>";
+    }
+  </script>
+</body>
+
+</html>
